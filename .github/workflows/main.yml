@@ -1,4 +1,4 @@
-name: Deploy Step Functions Terraform
+name: Deploy Terraform
 
 permissions:
   id-token: write

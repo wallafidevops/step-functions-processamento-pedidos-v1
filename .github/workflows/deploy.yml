@@ -1,4 +1,4 @@
-name: Deploy Step
+name: Deploy Step Functions Processamento Pedidos
 
 on: 
   workflow_call:
