@@ -1,0 +1,60 @@
+name: Deploy Step
+
+on: 
+  workflow_call:
+    inputs:
+      env_name:
+        type: string
+        required: true
+        description: 'Nome ambiente'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform init
+        run: terraform init 
+
+      - name: Terraform Create Workspace if Not Exists
+        run: |
+          terraform workspace list | grep ${{ inputs.env_name }} || terraform workspace new ${{ inputs.env_name }}
+
+      - name: Terraform Select Workspace
+        run: terraform workspace select ${{ inputs.env_name }}
+
+      - name: Terraform Plan  
+        run: |
+          if [ "${{ inputs.env_name }}" == "hml" ]; then
+            terraform plan -var-file="hml.tfvars"
+          elif [ "${{ inputs.env_name }}" == "prod" ]; then
+            terraform plan -var-file="prod.tfvars"
+          else
+            terraform plan
+          fi
+
+      - name: Terraform Apply
+        run: |
+          if [ "${{ inputs.env_name }}" == "hml" ]; then
+            terraform apply -var-file="hml.tfvars" -auto-approve
+          elif [ "${{ inputs.env_name }}" == "prod" ]; then
+            terraform apply -var-file="prod.tfvars" -auto-approve
+          else
+            terraform apply -auto-approve
+          fi
+
+      - name: Terraform Workspace Output
+        run: terraform output

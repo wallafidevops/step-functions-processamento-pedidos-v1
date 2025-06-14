@@ -1,0 +1,47 @@
+name: Destroy
+
+on: 
+  workflow_dispatch:
+    inputs:
+      env_name:
+        type: string
+        required: true
+        description: 'Nome do ambiente (ex: hml ou prod)'
+
+jobs:
+  terraform_destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Create Workspace if Not Exists
+        run: |
+          terraform workspace list | grep ${{ inputs.env_name }} || terraform workspace new ${{ inputs.env_name }}
+
+      - name: Select Workspace
+        run: terraform workspace select ${{ inputs.env_name }}
+
+      - name: Terraform Destroy
+        run: |
+          if [ "${{ inputs.env_name }}" == "hml" ]; then
+            terraform destroy -var-file="hml.tfvars" -auto-approve
+          elif [ "${{ inputs.env_name }}" == "prod" ]; then
+            terraform destroy -var-file="prod.tfvars" -auto-approve
+          else
+            terraform destroy -auto-approve
+          fi

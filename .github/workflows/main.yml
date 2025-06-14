@@ -1,0 +1,42 @@
+name: Deploy Step Functions Terraform
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - closed
+
+  workflow_dispatch:
+
+jobs:
+  CI:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4.1.5
+
+  deploy-dev:
+    name: deploy-dev
+    if: github.event.pull_request.merged == true && github.base_ref == 'develop'
+    needs: [CI]
+    uses: wallafidevops/step-functions-processamento-pedidos/.github/workflows/deploy.yml@develop
+    with:
+      env_name: hml
+    secrets: inherit
+
+  deploy-prod:
+    name: deploy-prod
+    if: github.event.pull_request.merged == true && github.base_ref == 'main'
+    needs: [CI]
+    uses: wallafidevops/step-functions-processamento-pedidos/.github/workflows/deploy.yml@main
+    with:
+      env_name: prod
+    secrets: inherit
