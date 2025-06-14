@@ -27,7 +27,7 @@ jobs:
     name: deploy-dev
     if: github.event.pull_request.merged == true && github.base_ref == 'develop'
     needs: [CI]
-    uses: wallafidevops/step-functions-processamento-pedidos/.github/workflows/deploy.yml@develop
+    uses: wallafidevops/step-functions-processamento-pedidos-v1/.github/workflows/deploy.yml@develop
     with:
       env_name: hml
     secrets: inherit
@@ -36,7 +36,7 @@ jobs:
     name: deploy-prod
     if: github.event.pull_request.merged == true && github.base_ref == 'main'
     needs: [CI]
-    uses: wallafidevops/step-functions-processamento-pedidos/.github/workflows/deploy.yml@main
+    uses: wallafidevops/step-functions-processamento-pedidos-v1/.github/workflows/deploy.yml@main
     with:
       env_name: prod
     secrets: inherit
